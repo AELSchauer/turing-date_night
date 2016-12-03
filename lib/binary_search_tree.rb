@@ -1,27 +1,94 @@
-# require 'pry'
+require 'pry'
 
 class BinarySearchTree
 
+	#attr_accessor :node
+	attr_reader :node
+
 	def insert(movie_rating, movie_title)
-		node = create_node(movie_rating, movie_title)
-		puts node
-		puts node.movie_rating
-		puts node.movie_title
+
+		if @node.nil?
+			@node = create_node(movie_rating, movie_title)
+			return 0 #This is what it's supposed to return
+			# return @node.object_id  #Temporarily return this while working
+		# elsif movie_rating < @node.movie_rating
+		# 	#less_link
+		# 	node.less_link = create_node(movie_rating, movie_title)
+		# elsif @node.movie_rating < movie_rating
+		# 	#more_link
+		# 	node.more_link = create_node(movie_rating, movie_title)
+		else	
+			sub_node, link_type, depth = get_node_1(@node, movie_rating	)
+			if link_type == "less_link"
+				sub_node.less_link = create_node(movie_rating, movie_title)
+			elsif link_type == "more_link"
+				sub_node.more_link = create_node(movie_rating, movie_title)
+			end
+			return depth
+		end
 	end
 
-	private
+	# private
 
 	def create_node(movie_rating, movie_title)
 		return Node.new(movie_rating, movie_title)
 
 	end
 
+	def get_node_1(sub_node, movie_rating)
+		if movie_rating < sub_node.movie_rating
+			#less_link
+			if sub_node.less_link.nil?
+				p "less than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
+				return sub_node, "less_link", 1
+			else
+				p "less than #{sub_node.movie_rating} is full; going to the next node; 1 --> 2"
+				sub_node = sub_node.less_link
+				return get_node_2(sub_node, movie_rating)
+			end
+		elsif sub_node.movie_rating < movie_rating
+			#more_link
+			if sub_node.more_link.nil?
+				p "more than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
+				return sub_node, "more_link", 1
+			else
+				p "more than #{sub_node.movie_rating} is full; going to the next node; 1 --> 2"
+				sub_node = sub_node.less_link
+				return get_node_2(sub_node, movie_rating)
+			end
+		end
+	end
+
+	def get_node_2(sub_node, movie_rating)
+		if movie_rating < sub_node.movie_rating
+			#less_link
+			if sub_node.less_link.nil?
+				p "less than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
+				return sub_node, "less_link", 2
+			else
+				p "less than #{sub_node.movie_rating} is full; need to create 2 --> 3"
+				# sub_node = sub_node.less_link
+				# get_node_2(sub_node, movie_rating)
+			end
+		elsif sub_node.movie_rating < movie_rating
+			#more_link
+			if sub_node.more_link.nil?
+				p "more than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
+				return sub_node, "more_link", 2
+			else
+				p "more than #{sub_node.movie_rating} is full; need to create 2 --> 3"
+				# sub_node = sub_node.less_link
+				# get_node_2(sub_node, movie_rating)
+			end
+		end
+	end
+
 end
 
 
 class Node
-
-	attr_accessor :movie_rating, :movie_title, :left_link, :right_link
+	## MOVE THIS OVER TO ITS OWN FILE!!!
+	attr_accessor :movie_rating, :movie_title, :less_link, :more_link
 
 	def initialize(movie_rating, movie_title)
 		@movie_rating = movie_rating
@@ -30,18 +97,23 @@ class Node
 
 end
 
-
-# Assume we've started with:
-
-# ```ruby
-# tree = BinarySearchTree.new
-# ```
-
 tree = BinarySearchTree.new
 
-tree.insert(61,"Bill and Ted's Excellent Adventure")
+depth = tree.insert(61,"Bill and Ted's Excellent Adventure")
 
-puts tree
+puts "#{depth}  outside #{tree.node.movie_rating} #{tree.node.object_id}"
+
+depth = tree.insert(16, "Johnny English")
+
+puts "#{depth}L outside #{tree.node.less_link.movie_rating} #{tree.node.less_link.object_id}"
+
+depth = tree.insert(92, "Sharknado 3")
+
+puts "#{depth}R outside #{tree.node.more_link.movie_rating} #{tree.node.more_link.object_id}"
+
+depth = tree.insert(50, "Hannibal Buress: Animal Furnace")
+
+puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.node.less_link.more_link.object_id}"
 
 # ### `insert`
 
