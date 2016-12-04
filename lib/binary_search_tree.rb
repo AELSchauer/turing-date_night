@@ -1,4 +1,4 @@
-require 'pry'
+require './lib/node'
 
 class BinarySearchTree
 
@@ -9,22 +9,25 @@ class BinarySearchTree
 
 		if @node.nil?
 			@node = create_node(movie_rating, movie_title)
-			return 0 #This is what it's supposed to return
-			# return @node.object_id  #Temporarily return this while working
-		# elsif movie_rating < @node.movie_rating
-		# 	#less_link
-		# 	node.less_link = create_node(movie_rating, movie_title)
-		# elsif @node.movie_rating < movie_rating
-		# 	#more_link
-		# 	node.more_link = create_node(movie_rating, movie_title)
+			return 0
 		else	
-			sub_node, link_type, depth = get_node_1(@node, movie_rating	)
-			if link_type == "less_link"
-				sub_node.less_link = create_node(movie_rating, movie_title)
-			elsif link_type == "more_link"
-				sub_node.more_link = create_node(movie_rating, movie_title)
+			sub_node, link_type, depth = get_node_insert(@node, movie_rating, 1)
+			if link_type == "lower_link"
+				sub_node.lower_link = create_node(movie_rating, movie_title)
+			elsif link_type == "higher_link"
+				sub_node.higher_link = create_node(movie_rating, movie_title)
 			end
 			return depth
+		end
+	end
+
+	def include?(movie_rating)
+
+		if @node.nil?
+			@node = create_node(movie_rating, movie_title)
+			return false
+		else
+			get_node_include?(sub_node, movie_rating)
 		end
 	end
 
@@ -32,103 +35,38 @@ class BinarySearchTree
 
 	def create_node(movie_rating, movie_title)
 		return Node.new(movie_rating, movie_title)
-
 	end
 
-	def get_node_1(sub_node, movie_rating)
+	def get_node_insert(sub_node, movie_rating, depth)
+		p sub_node.movie_rating
 		if movie_rating < sub_node.movie_rating
-			#less_link
-			if sub_node.less_link.nil?
-				p "less than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
-				return sub_node, "less_link", 1
+			if sub_node.lower_link.nil?
+				return sub_node, "lower_link", depth
 			else
-				p "less than #{sub_node.movie_rating} is full; going to the next node; 1 --> 2"
-				sub_node = sub_node.less_link
-				return get_node_2(sub_node, movie_rating)
+				get_node_insert(sub_node.lower_link, movie_rating, depth+1)
 			end
 		elsif sub_node.movie_rating < movie_rating
-			#more_link
-			if sub_node.more_link.nil?
-				p "more than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
-				return sub_node, "more_link", 1
+			if sub_node.higher_link.nil?
+				return sub_node, "higher_link", depth
 			else
-				p "more than #{sub_node.movie_rating} is full; going to the next node; 1 --> 2"
-				sub_node = sub_node.less_link
-				return get_node_2(sub_node, movie_rating)
+				get_node_insert(sub_node.higher_link, movie_rating, depth+1)
 			end
 		end
 	end
 
-	def get_node_2(sub_node, movie_rating)
-		if movie_rating < sub_node.movie_rating
-			#less_link
-			if sub_node.less_link.nil?
-				p "less than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
-				return sub_node, "less_link", 2
-			else
-				p "less than #{sub_node.movie_rating} is full; need to create 2 --> 3"
-				# sub_node = sub_node.less_link
-				# get_node_2(sub_node, movie_rating)
-			end
+	def get_node_include?(sub_node, movie_rating)
+
+		if sub_node.nil?
+			return false
+		elsif sub_node.movie_rating == movie_rating
+			return true
+		elsif movie_rating < sub_node.movie_rating
+			get_node_include?(sub_node.lower_link, movie_rating)
 		elsif sub_node.movie_rating < movie_rating
-			#more_link
-			if sub_node.more_link.nil?
-				p "more than #{sub_node.movie_rating} is empty; inserting #{movie_rating}"
-				return sub_node, "more_link", 2
-			else
-				p "more than #{sub_node.movie_rating} is full; need to create 2 --> 3"
-				# sub_node = sub_node.less_link
-				# get_node_2(sub_node, movie_rating)
-			end
+			get_node_include?(sub_node.higher_link, movie_rating)
 		end
-	end
 
 end
-
-
-class Node
-	## MOVE THIS OVER TO ITS OWN FILE!!!
-	attr_accessor :movie_rating, :movie_title, :less_link, :more_link
-
-	def initialize(movie_rating, movie_title)
-		@movie_rating = movie_rating
-		@movie_title = movie_title
-	end
-
-end
-
-tree = BinarySearchTree.new
-
-depth = tree.insert(61,"Bill and Ted's Excellent Adventure")
-
-puts "#{depth}  outside #{tree.node.movie_rating} #{tree.node.object_id}"
-
-depth = tree.insert(16, "Johnny English")
-
-puts "#{depth}L outside #{tree.node.less_link.movie_rating} #{tree.node.less_link.object_id}"
-
-depth = tree.insert(92, "Sharknado 3")
-
-puts "#{depth}R outside #{tree.node.more_link.movie_rating} #{tree.node.more_link.object_id}"
-
-depth = tree.insert(50, "Hannibal Buress: Animal Furnace")
-
-puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.node.less_link.more_link.object_id}"
-
-# ### `insert`
-
-# The `insert` method adds a new node with the passed-in data. Each node is comprised of a score and a movie title. It returns the depth of the new node in the tree.
-
-# ```ruby
-# tree.insert(61, "Bill & Ted's Excellent Adventure")
-# # => 0
-# tree.insert(16, "Johnny English")
-# # => 1
-# tree.insert(92, "Sharknado 3")
-# # => 1
-# tree.insert(50, "Hannibal Buress: Animal Furnace")
-# # => 2
-# ```
 
 
 
@@ -212,11 +150,11 @@ puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.nod
 
 # ### `health`
 
-# Report on the health of the tree by summarizing the number of child nodes (nodes beneath each node) at a given depth. For health, we're worried about 3 values:
+# Report on the health of the tree by summarizing the number of child sub_nodes (sub_nodes beneath each sub_node) at a given depth. For health, we're worried about 3 values:
 
-# * Score of the node
-# * Total number of child nodes including the current node
-# * Percentage of all the nodes that are this node or it's children
+# * Score of the sub_node
+# * Total number of child sub_nodes including the current sub_node
+# * Percentage of all the sub_nodes that are this sub_node or it's children
 
 # ```ruby
 # tree.insert(98, "Animals United")
@@ -234,13 +172,13 @@ puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.nod
 # => [[36, 2, 28], [93, 3, 42]]
 # ```
 
-# Where the return value is an `Array` with one nested array per node at that level. The nested array is:
+# Where the return value is an `Array` with one nested array per sub_node at that level. The nested array is:
 
 # ```
-# [score in the node, 1 + number of child nodes, floored percentage of (1+children) over the total number of nodes]
+# [score in the sub_node, 1 + number of child sub_nodes, floored percentage of (1+children) over the total number of sub_nodes]
 # ```
 
-# When the percentages of two nodes at the same level are dramatically different, like `28` and `42` above, then we know that this tree is starting to become unbalanced.
+# When the percentages of two sub_nodes at the same level are dramatically different, like `28` and `42` above, then we know that this tree is starting to become unbalanced.
 
 # ## Extensions
 
@@ -250,7 +188,7 @@ puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.nod
 
 # #### `leaves`
 
-# A leaf is a node that has no left or right value. How many leaf nodes are on the tree?
+# A leaf is a sub_node that has no left or right value. How many leaf sub_nodes are on the tree?
 
 # ```ruby
 # tree.leaves
@@ -267,7 +205,7 @@ puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.nod
 # # => 3
 # ```
 
-# ### Deleting Nodes
+# ### Deleting sub_nodes
 
 # Remove a specified piece score from the tree:
 
@@ -278,7 +216,7 @@ puts "#{depth}L outside #{tree.node.less_link.more_link.movie_rating} #{tree.nod
 # # => nil
 # ```
 
-# Note that any children of the deleted node should still be present in the tree.
+# Note that any children of the deleted sub_node should still be present in the tree.
 
 # ## Evaluation Rubric
 
