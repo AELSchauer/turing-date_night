@@ -1,8 +1,8 @@
 require './lib/node'
+require 'pry'
 
 class BinarySearchTree
 
-	#attr_accessor :node
 	attr_reader :node
 
 	def insert(movie_rating, movie_title)
@@ -25,6 +25,20 @@ class BinarySearchTree
 	def min
 		get_maxmin_node(@node, "min")
 	end
+
+	def depth_of(movie_rating)
+		find_rating(@node, movie_rating, 0)
+	end
+
+
+	#### Extensions
+	# def height(movie_rating)
+	# 	if @node.nil?
+	# 		return nil
+	# 	else
+	# 		get_next_1(@node)
+	# 	end
+	# end
 
 	# private
 
@@ -80,7 +94,31 @@ class BinarySearchTree
 		end
 	end
 
+	def find_rating(sub_node, movie_rating, depth)
+		if sub_node.nil?
+			return nil
+		elsif sub_node.movie_rating == movie_rating
+			return depth
+		else
+			ratings = []
+			ratings.push(find_rating(sub_node.lower_link, movie_rating, depth+1))
+			ratings.push(find_rating(sub_node.higher_link, movie_rating, depth+1))
+			ratings = ratings.delete_if { |rating| rating.nil? }
+			if ratings.empty?
+				return nil
+			else
+				return ratings[0]
+			end
+		end
+	end
+
+	##### Extensions
+	# def get_next_1(sub_node)
+	# 	return "HI"
+	# end
+
 end
+
 
 
 # ### `depth_of`
