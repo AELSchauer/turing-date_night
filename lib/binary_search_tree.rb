@@ -6,29 +6,24 @@ class BinarySearchTree
 	attr_reader :node
 
 	def insert(movie_rating, movie_title)
-
-		if @node.nil?
+		if @node.nil?	# Is there some way to change this local variable by calling it something else?
 			@node = create_node(movie_rating, movie_title)
 			return 0
-		else	
-			sub_node, link_type, depth = get_node_insert(@node, movie_rating, 1)
-			if link_type == "lower_link"
-				sub_node.lower_link = create_node(movie_rating, movie_title)
-			elsif link_type == "higher_link"
-				sub_node.higher_link = create_node(movie_rating, movie_title)
-			end
-			return depth
+		else
+			return get_node_insert(@node, movie_rating, movie_title, 1)
 		end
 	end
 
 	def include?(movie_rating)
+		get_node_include?(@node, movie_rating)
+	end
 
-		if @node.nil?
-			@node = create_node(movie_rating, movie_title)
-			return false
-		else
-			get_node_include?(sub_node, movie_rating)
-		end
+	def max
+		get_maxmin_node(@node, "max")
+	end
+
+	def min
+		get_maxmin_node(@node, "min")
 	end
 
 	# private
@@ -37,25 +32,25 @@ class BinarySearchTree
 		return Node.new(movie_rating, movie_title)
 	end
 
-	def get_node_insert(sub_node, movie_rating, depth)
-		p sub_node.movie_rating
+	def get_node_insert(sub_node, movie_rating, movie_title, depth)
 		if movie_rating < sub_node.movie_rating
 			if sub_node.lower_link.nil?
-				return sub_node, "lower_link", depth
+				sub_node.lower_link = create_node(movie_rating, movie_title)
+				return depth
 			else
-				get_node_insert(sub_node.lower_link, movie_rating, depth+1)
+				get_node_insert(sub_node.lower_link, movie_rating, movie_title, depth+1)
 			end
 		elsif sub_node.movie_rating < movie_rating
 			if sub_node.higher_link.nil?
-				return sub_node, "higher_link", depth
+				sub_node.higher_link = create_node(movie_rating, movie_title)
+				return depth
 			else
-				get_node_insert(sub_node.higher_link, movie_rating, depth+1)
+				get_node_insert(sub_node.higher_link, movie_rating, movie_title, depth+1)
 			end
 		end
 	end
 
 	def get_node_include?(sub_node, movie_rating)
-
 		if sub_node.nil?
 			return false
 		elsif sub_node.movie_rating == movie_rating
@@ -65,23 +60,28 @@ class BinarySearchTree
 		elsif sub_node.movie_rating < movie_rating
 			get_node_include?(sub_node.higher_link, movie_rating)
 		end
+	end
+
+	def get_maxmin_node(sub_node, maxmin)
+		if @node.nil?
+			return {}
+		elsif maxmin == "max"
+			if sub_node.higher_link.nil?
+				return { sub_node.movie_title => sub_node.movie_rating }
+			else
+				get_maxmin_node(sub_node.higher_link, maxmin)
+			end
+		elsif maxmin == "min"
+			if sub_node.lower_link.nil?
+				return { sub_node.movie_title => sub_node.movie_rating }
+			else
+				get_maxmin_node(sub_node.lower_link, maxmin)
+			end
+		end
+	end
 
 end
 
-
-
-# For all the later methods defined here, assume that we've run these four inserts.
-
-# ### `include?`
-
-# Verify/reject the presence of a score in the tree:
-
-# ```ruby
-# tree.include?(16)
-# # => true
-# tree.include?(72)
-# # => false
-# ```
 
 # ### `depth_of`
 
@@ -92,24 +92,6 @@ end
 # # => 1
 # tree.depth_of(50)
 # # => 2
-# ```
-
-# ### `max`
-
-# Which movie has the highest score in the list? What is it's score?
-
-# ```ruby
-# tree.max
-# # => {"Sharknado 3"=>92}
-# ```
-
-# ### `min`
-
-# Which movie has the lowest score in the list? What is it's score?
-
-# ```ruby
-# tree.min
-# # => {"Johnny English"=>16}
 # ```
 
 # ### `sort`
