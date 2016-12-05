@@ -1,4 +1,5 @@
 require './lib/node'
+require './lib/insertion_sort'
 require 'pry'
 
 class BinarySearchTree
@@ -30,6 +31,34 @@ class BinarySearchTree
 		find_rating(@node, movie_rating, 0)
 	end
 
+	def sort
+		all_nodes = collect_nodes(@node,[])
+		sorter = InsertionSort.new
+		return sorter.sort(all_nodes)
+	end
+
+	def load(file_name)
+		movies = open_file(file_name)
+		if movies.nil?
+			return nil
+		else
+			upload_count = 0
+			movies.each do |movie_rating, movie_title|
+				if insert(movie_rating, movie_title).nil? == false
+					upload_count = upload_count + 1
+				end
+			end
+			return upload_count
+		end
+	end
+
+	def health(level)
+		if @node.nil?
+			return nil
+		else
+			total_number_of_nodes = collect_nodes(@node,[])
+			p total_number_of_nodes
+		end
 
 	#### Extensions
 	# def height(movie_rating)
@@ -40,7 +69,7 @@ class BinarySearchTree
 	# 	end
 	# end
 
-	# private
+	private
 
 	def create_node(movie_rating, movie_title)
 		return Node.new(movie_rating, movie_title)
@@ -112,61 +141,41 @@ class BinarySearchTree
 		end
 	end
 
+	def collect_nodes(sub_node,all_nodes)
+		if sub_node.nil?
+			return all_nodes
+		else
+			node_data = {sub_node.movie_title => sub_node.movie_rating}
+			all_nodes.push(node_data)
+			collect_nodes(sub_node.lower_link, all_nodes)
+			collect_nodes(sub_node.higher_link, all_nodes)
+		end
+		
+	end
+
+	def open_file(file_name)
+		begin
+		   File.open(file_name)
+		rescue
+		   return nil
+		else
+			movies = []
+			File.open(file_name).each do |line|
+				line.gsub!("\n","")
+				line.sub!(", ",";")
+				movie_rating, movie_title = line.split(";")
+				movies.push([movie_rating.to_i, movie_title])
+			end
+			return movies
+		end
+	end
+
 	##### Extensions
 	# def get_next_1(sub_node)
 	# 	return "HI"
 	# end
 
 end
-
-
-
-# ### `depth_of`
-
-# Reports the depth of the tree where a score appears. Return nil if the score does not exist:
-
-# ```ruby
-# tree.depth_of(92)
-# # => 1
-# tree.depth_of(50)
-# # => 2
-# ```
-
-# ### `sort`
-
-# Return an array of all the movies and scores in sorted ascending order. Return them as an array of hashes.
-# *Note*: you're not using Ruby's `Array#sort`. You're traversing the tree.
-
-# ```ruby
-# tree.sort
-# # => [{"Johnny English"=>16},
-# #   {"Hannibal Buress: Animal Furnace"=>50},
-# #   {"Bill & Ted's Excellent Adventure"=>61},
-# #  {"Sharknado 3"=>92}]
-# ```
-
-# ### `load`
-
-# Assuming we have a file named `movies.txt` with one score/movie pair per line:
-
-# ```
-# # movies.txt sample format:
-# 34, Hannibal Buress: Comedy Camisado
-# 63, Meet My Valentine
-# 22, Experimenter
-# 84, French Dirty
-# 41, Love
-# 10, I Love You Phillip Morris
-# ```
-
-# ```ruby
-# tree.load('movies.txt')
-# # => 26
-# ```
-
-# Where the return value is the number of movies inserted into the tree. If a score is already present in the tree when `load` is called, ignore it.
-
-# See an example file [here](https://gist.github.com/neight-allen/dbc9e3ad0f79bff24888)
 
 # ### `health`
 
