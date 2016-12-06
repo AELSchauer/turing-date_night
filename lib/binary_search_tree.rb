@@ -57,12 +57,15 @@ class BinarySearchTree
 		if @node.nil?
 			return nil
 		else
-			total_number_of_nodes = collect_nodes(@node,[]).length
-			level_nodes = collect_nodes_at_depth(@node, [], 0, 2)
-			level_nodes.each do |level_node|
-				sub_level_nodes = collect_nodes(level_node, [])
-				p sub_level_nodes
+			total_number_of_nodes = collect_nodes(@node,[]).length / 1.0
+			level_nodes = collect_nodes_at_depth(@node, [], 0, level)
+			(level_nodes.length).times do |i|
+				sub_level_node, level_nodes[i] = level_nodes[i], [level_nodes[i].movie_rating]
+				child_nodes = collect_nodes(sub_level_node, [])
+				level_nodes[i].push(child_nodes.length)
+				level_nodes[i].push(((child_nodes.length / total_number_of_nodes) * 100).floor)
 			end
+			return level_nodes
 		end
 	end
 
@@ -76,18 +79,6 @@ class BinarySearchTree
 	# end
 
 	private
-
-	def collect_nodes_at_depth(sub_node, all_nodes, current_depth, desired_depth)
-		if sub_node.nil?
-			return all_nodes
-		elsif current_depth == desired_depth
-			all_nodes.push(sub_node)
-			return all_nodes
-		else
-			collect_nodes_at_depth(sub_node.lower_link, all_nodes, current_depth+1, desired_depth)
-			collect_nodes_at_depth(sub_node.higher_link, all_nodes, current_depth+1, desired_depth)
-		end
-	end
 
 	def create_node(movie_rating, movie_title)
 		return Node.new(movie_rating, movie_title)
@@ -186,44 +177,24 @@ class BinarySearchTree
 		end
 	end
 
+	def collect_nodes_at_depth(sub_node, all_nodes, current_depth, desired_depth)
+		if sub_node.nil?
+			return all_nodes
+		elsif current_depth == desired_depth
+			all_nodes.push(sub_node)
+			return all_nodes
+		else
+			collect_nodes_at_depth(sub_node.lower_link, all_nodes, current_depth+1, desired_depth)
+			collect_nodes_at_depth(sub_node.higher_link, all_nodes, current_depth+1, desired_depth)
+		end
+	end
+
 	##### Extensions
 	# def get_next_1(sub_node)
 	# 	return "HI"
 	# end
 
 end
-
-# ### `health`
-
-# Report on the health of the tree by summarizing the number of child sub_nodes (sub_nodes beneath each sub_node) at a given depth. For health, we're worried about 3 values:
-
-# * Score of the sub_node
-# * Total number of child sub_nodes including the current sub_node
-# * Percentage of all the sub_nodes that are this sub_node or it's children
-
-# ```ruby
-# tree.insert(98, "Animals United")
-# tree.insert(58, "Armageddon")
-# tree.insert(36, "Bill & Ted's Bogus Journey")
-# tree.insert(93, "Bill & Ted's Excellent Adventure")
-# tree.insert(86, "Charlie's Angels")
-# tree.insert(38, "Charlie's Country")
-# tree.insert(69, "Collateral Damage")
-# tree.health(0)
-# => [[98, 7, 100]]
-# tree.health(1)
-# => [[58, 6, 85]]
-# tree.health(2)
-# => [[36, 2, 28], [93, 3, 42]]
-# ```
-
-# Where the return value is an `Array` with one nested array per sub_node at that level. The nested array is:
-
-# ```
-# [score in the sub_node, 1 + number of child sub_nodes, floored percentage of (1+children) over the total number of sub_nodes]
-# ```
-
-# When the percentages of two sub_nodes at the same level are dramatically different, like `28` and `42` above, then we know that this tree is starting to become unbalanced.
 
 # ## Extensions
 
