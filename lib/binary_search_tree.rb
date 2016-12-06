@@ -1,51 +1,54 @@
 require './lib/node'
 require './lib/insertion_sort'
+require './lib/load'
 require 'pry'
 
 class BinarySearchTree
 
-	attr_reader :node
+	attr_reader :head
 
 	def insert(movie_rating, movie_title)
-		if @node.nil?	# Is there some way to change this local variable by calling it something else?
-			@node = create_node(movie_rating, movie_title)
+		if @head.nil?
+			@head = Node.new(movie_rating, movie_title)
 			return 0
 		else
-			return get_node_insert(@node, movie_rating, movie_title, 1)
+      return @head.insert(movie_rating, movie_title)
 		end
 	end
 
 	def include?(movie_rating)
-		get_node_include?(@node, movie_rating)
+		get_node_include?(@head, movie_rating)
 	end
 
 	def max
-		get_maxmin_node(@node, "max")
+		get_maxmin_node(@head, "max")
 	end
 
 	def min
-		get_maxmin_node(@node, "min")
+		get_maxmin_node(@head, "min")
 	end
 
 	def depth_of(movie_rating)
-		find_rating(@node, movie_rating, 0)
+		find_rating(@head, movie_rating, 0)
 	end
 
 	def sort
-		all_nodes = collect_nodes(@node,[])
+		all_nodes = collect_nodes(@head,[])
 		sorter = InsertionSort.new
 		sorted_nodes = sorter.sort(all_nodes)
 		return sorted_nodes.map { |sorted_node| {sorted_node.movie_title => sorted_node.movie_rating} }
 	end
 
 	def load(file_name)
-		movies = open_file(file_name)
+		loader = Load.new
+		movies = loader.open_file(file_name)
 		if movies.nil?
 			return nil
 		else
 			upload_count = 0
 			movies.each do |movie_rating, movie_title|
-				if insert(movie_rating, movie_title).nil? == false
+				depth = insert(movie_rating, movie_title)
+				if not depth.nil?
 					upload_count = upload_count + 1
 				end
 			end
@@ -54,11 +57,11 @@ class BinarySearchTree
 	end
 
 	def health(level)
-		if @node.nil?
+		if @head.nil?
 			return nil
 		else
-			total_number_of_nodes = collect_nodes(@node,[]).length / 1.0
-			level_nodes = collect_nodes_at_depth(@node, [], 0, level)
+			total_number_of_nodes = collect_nodes(@head,[]).length / 1.0
+			level_nodes = collect_nodes_at_depth(@head, [], 0, level)
 			(level_nodes.length).times do |i|
 				sub_level_node, level_nodes[i] = level_nodes[i], [level_nodes[i].movie_rating]
 				child_nodes = collect_nodes(sub_level_node, [])
@@ -70,77 +73,49 @@ class BinarySearchTree
 	end
 
 	#### Extensions
-	# def height(movie_rating)
-	# 	if @node.nil?
-	# 		return nil
-	# 	else
-	# 		get_next_1(@node)
-	# 	end
-	# end
+
 
 	private
 
-	def create_node(movie_rating, movie_title)
-		return Node.new(movie_rating, movie_title)
-	end
-
-	def get_node_insert(sub_node, movie_rating, movie_title, depth)
-		if movie_rating < sub_node.movie_rating
-			if sub_node.lower_link.nil?
-				sub_node.lower_link = create_node(movie_rating, movie_title)
-				return depth
-			else
-				get_node_insert(sub_node.lower_link, movie_rating, movie_title, depth+1)
-			end
-		elsif sub_node.movie_rating < movie_rating
-			if sub_node.higher_link.nil?
-				sub_node.higher_link = create_node(movie_rating, movie_title)
-				return depth
-			else
-				get_node_insert(sub_node.higher_link, movie_rating, movie_title, depth+1)
-			end
-		end
-	end
-
-	def get_node_include?(sub_node, movie_rating)
-		if sub_node.nil?
+	def get_node_include?(node, movie_rating)
+		if node.nil?
 			return false
-		elsif sub_node.movie_rating == movie_rating
+		elsif node.movie_rating == movie_rating
 			return true
-		elsif movie_rating < sub_node.movie_rating
-			get_node_include?(sub_node.lower_link, movie_rating)
-		elsif sub_node.movie_rating < movie_rating
-			get_node_include?(sub_node.higher_link, movie_rating)
+		elsif movie_rating < node.movie_rating
+			get_node_include?(node.lower_link, movie_rating)
+		elsif node.movie_rating < movie_rating
+			get_node_include?(node.higher_link, movie_rating)
 		end
 	end
 
-	def get_maxmin_node(sub_node, maxmin)
-		if @node.nil?
+	def get_maxmin_node(node, maxmin)
+		if @head.nil?
 			return {}
 		elsif maxmin == "max"
-			if sub_node.higher_link.nil?
-				return { sub_node.movie_title => sub_node.movie_rating }
+			if node.higher_link.nil?
+				return { node.movie_title => node.movie_rating }
 			else
-				get_maxmin_node(sub_node.higher_link, maxmin)
+				get_maxmin_node(node.higher_link, maxmin)
 			end
 		elsif maxmin == "min"
-			if sub_node.lower_link.nil?
-				return { sub_node.movie_title => sub_node.movie_rating }
+			if node.lower_link.nil?
+				return { node.movie_title => node.movie_rating }
 			else
-				get_maxmin_node(sub_node.lower_link, maxmin)
+				get_maxmin_node(node.lower_link, maxmin)
 			end
 		end
 	end
 
-	def find_rating(sub_node, movie_rating, depth)
-		if sub_node.nil?
+	def find_rating(node, movie_rating, depth)
+		if node.nil?
 			return nil
-		elsif sub_node.movie_rating == movie_rating
+		elsif node.movie_rating == movie_rating
 			return depth
 		else
 			ratings = []
-			ratings.push(find_rating(sub_node.lower_link, movie_rating, depth+1))
-			ratings.push(find_rating(sub_node.higher_link, movie_rating, depth+1))
+			ratings.push(find_rating(node.lower_link, movie_rating, depth+1))
+			ratings.push(find_rating(node.higher_link, movie_rating, depth+1))
 			ratings = ratings.delete_if { |rating| rating.nil? }
 			if ratings.empty?
 				return nil
@@ -150,49 +125,30 @@ class BinarySearchTree
 		end
 	end
 
-	def collect_nodes(sub_node, all_nodes)
-		if sub_node.nil?
+	def collect_nodes(node, all_nodes)
+		if node.nil?
 			return all_nodes
 		else
-			all_nodes.push(sub_node)
-			collect_nodes(sub_node.lower_link, all_nodes)
-			collect_nodes(sub_node.higher_link, all_nodes)
+			all_nodes.push(node)
+			collect_nodes(node.lower_link, all_nodes)
+			collect_nodes(node.higher_link, all_nodes)
 		end
 	end
 
-	def open_file(file_name)
-		begin
-		   File.open(file_name)
-		rescue
-		   return nil
-		else
-			movies = []
-			File.open(file_name).each do |line|
-				line.gsub!("\n","")
-				line.sub!(", ",";")
-				movie_rating, movie_title = line.split(";")
-				movies.push([movie_rating.to_i, movie_title])
-			end
-			return movies
-		end
-	end
-
-	def collect_nodes_at_depth(sub_node, all_nodes, current_depth, desired_depth)
-		if sub_node.nil?
+	def collect_nodes_at_depth(node, all_nodes, current_depth, desired_depth)
+		if node.nil?
 			return all_nodes
 		elsif current_depth == desired_depth
-			all_nodes.push(sub_node)
+			all_nodes.push(node)
 			return all_nodes
 		else
-			collect_nodes_at_depth(sub_node.lower_link, all_nodes, current_depth+1, desired_depth)
-			collect_nodes_at_depth(sub_node.higher_link, all_nodes, current_depth+1, desired_depth)
+			collect_nodes_at_depth(node.lower_link, all_nodes, current_depth+1, desired_depth)
+			collect_nodes_at_depth(node.higher_link, all_nodes, current_depth+1, desired_depth)
 		end
 	end
 
 	##### Extensions
-	# def get_next_1(sub_node)
-	# 	return "HI"
-	# end
+
 
 end
 
@@ -204,7 +160,7 @@ end
 
 # #### `leaves`
 
-# A leaf is a sub_node that has no left or right value. How many leaf sub_nodes are on the tree?
+# A leaf is a node that has no left or right value. How many leaf nodes are on the tree?
 
 # ```ruby
 # tree.leaves
@@ -221,7 +177,7 @@ end
 # # => 3
 # ```
 
-# ### Deleting sub_nodes
+# ### Deleting nodes
 
 # Remove a specified piece score from the tree:
 
@@ -232,7 +188,7 @@ end
 # # => nil
 # ```
 
-# Note that any children of the deleted sub_node should still be present in the tree.
+# Note that any children of the deleted node should still be present in the tree.
 
 # ## Evaluation Rubric
 
