@@ -34,7 +34,8 @@ class BinarySearchTree
 	def sort
 		all_nodes = collect_nodes(@node,[])
 		sorter = InsertionSort.new
-		return sorter.sort(all_nodes)
+		sorted_nodes = sorter.sort(all_nodes)
+		return sorted_nodes.map { |sorted_node| {sorted_node.movie_title => sorted_node.movie_rating} }
 	end
 
 	def load(file_name)
@@ -56,9 +57,14 @@ class BinarySearchTree
 		if @node.nil?
 			return nil
 		else
-			total_number_of_nodes = collect_nodes(@node,[])
-			p total_number_of_nodes
+			total_number_of_nodes = collect_nodes(@node,[]).length
+			level_nodes = collect_nodes_at_depth(@node, [], 0, 2)
+			level_nodes.each do |level_node|
+				sub_level_nodes = collect_nodes(level_node, [])
+				p sub_level_nodes
+			end
 		end
+	end
 
 	#### Extensions
 	# def height(movie_rating)
@@ -70,6 +76,18 @@ class BinarySearchTree
 	# end
 
 	private
+
+	def collect_nodes_at_depth(sub_node, all_nodes, current_depth, desired_depth)
+		if sub_node.nil?
+			return all_nodes
+		elsif current_depth == desired_depth
+			all_nodes.push(sub_node)
+			return all_nodes
+		else
+			collect_nodes_at_depth(sub_node.lower_link, all_nodes, current_depth+1, desired_depth)
+			collect_nodes_at_depth(sub_node.higher_link, all_nodes, current_depth+1, desired_depth)
+		end
+	end
 
 	def create_node(movie_rating, movie_title)
 		return Node.new(movie_rating, movie_title)
@@ -141,16 +159,14 @@ class BinarySearchTree
 		end
 	end
 
-	def collect_nodes(sub_node,all_nodes)
+	def collect_nodes(sub_node, all_nodes)
 		if sub_node.nil?
 			return all_nodes
 		else
-			node_data = {sub_node.movie_title => sub_node.movie_rating}
-			all_nodes.push(node_data)
+			all_nodes.push(sub_node)
 			collect_nodes(sub_node.lower_link, all_nodes)
 			collect_nodes(sub_node.higher_link, all_nodes)
 		end
-		
 	end
 
 	def open_file(file_name)

@@ -11,11 +11,8 @@ class InsertionSort
 		if sorted.length == 0
 			return 0
 		else
-			# The hash's value is the movie rating. Compare values by grabbing the hash.
-			unsorted_node_value = unsorted_node[unsorted_node.keys[0]]
 			sorted.each_with_index do |sorted_node, i|
-				sorted_node_value = sorted_node[sorted_node.keys[0]]
-				if unsorted_node_value <= sorted_node_value	
+				if unsorted_node.movie_rating <= sorted_node.movie_rating	
 					return i
 				end
 			end
@@ -23,7 +20,7 @@ class InsertionSort
 		end
 	end
 	def sort(unsorted)
-		# The unsorted array is a series of individual hashes.
+		# The unsorted variable is an array of Node objects.
 		sorted = []
 		(unsorted.length).times do
 			sorted, unsorted = insert_sorted(sorted, unsorted)

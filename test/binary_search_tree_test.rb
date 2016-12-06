@@ -501,11 +501,17 @@ class BinarySearchTreeTest < Minitest::Test
 
 
 
-	def test_bst_health_has_correct_output
-		tree = BinarySearchTree.new
-		p tree.health(0)
+	# def test_bst_health_has_correct_output_with_no_inserts
+	# 	tree = BinarySearchTree.new
+		
+	# 	assert_nil tree.health(0)
+	# end
+	# def test_bst_health_has_correct_output_with_some_inserts
+	# 	tree = BinarySearchTree.new
+	# 	tree.load("movies_medium.txt")
 
-	end
+	# 	p tree.health(0)
+	# end
 
 end
 
