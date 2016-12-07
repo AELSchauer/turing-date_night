@@ -13,142 +13,141 @@ class BinarySearchTree
 			return 0
 		else
       return @head.insert(movie_rating, movie_title)
+		end #NOT DONE
+	end
+
+	def include?(movie_rating) #NOT DONE
+		if @head.nil?
+			return false
+		else
+			node = @head.get_node_by_movie_rating(movie_rating)
+			node.nil? ? false : true
 		end
 	end
 
-	def include?(movie_rating)
-		get_node_include?(@head, movie_rating)
+	def max #NOT DONE
+		return maxmin("max")
 	end
 
-	def max
-		get_maxmin_node(@head, "max")
+	def min #NOT DONE
+		return maxmin("min")
 	end
 
-	def min
-		get_maxmin_node(@head, "min")
-	end
-
-	def depth_of(movie_rating)
-		find_rating(@head, movie_rating, 0)
+	def depth_of(movie_rating) #NOT DONE
+		if @head.nil?
+			return nil
+		else
+			node = @head.get_node_by_movie_rating(movie_rating)
+			node.nil? ? nil : node.depth
+		end
 	end
 
 	def sort
-		all_nodes = collect_nodes(@head,[])
-		sorter = InsertionSort.new
-		sorted_nodes = sorter.sort(all_nodes)
-		return sorted_nodes.map { |sorted_node| {sorted_node.movie_title => sorted_node.movie_rating} }
+		if @head.nil?
+			return []
+		else
+			nodes = @head.get_child_nodes
+			nodes.push(@head)
+			sorter = InsertionSort.new
+			nodes = sorter.sort(nodes)
+			return nodes.map { |sorted_node| {sorted_node.movie_title => sorted_node.movie_rating} }
+		end #NOT DONE
 	end
 
 	def load(file_name)
 		loader = Load.new
-		movies = loader.open_file(file_name)
-		if movies.nil?
+		opened_file = loader.open_file(file_name)
+		if opened_file.nil?
 			return nil
 		else
 			upload_count = 0
+			movies = loader.retrieve_movies_list(opened_file)
 			movies.each do |movie_rating, movie_title|
 				depth = insert(movie_rating, movie_title)
 				if not depth.nil?
-					upload_count = upload_count + 1
+					upload_count += 1
 				end
 			end
 			return upload_count
-		end
+		end#NOT DONE
 	end
 
-	def health(level)
+	def health(desired_depth) #NOT DONE
 		if @head.nil?
 			return nil
 		else
-			total_number_of_nodes = collect_nodes(@head,[]).length / 1.0
-			level_nodes = collect_nodes_at_depth(@head, [], 0, level)
-			(level_nodes.length).times do |i|
-				sub_level_node, level_nodes[i] = level_nodes[i], [level_nodes[i].movie_rating]
-				child_nodes = collect_nodes(sub_level_node, [])
-				level_nodes[i].push(child_nodes.length)
-				level_nodes[i].push(((child_nodes.length / total_number_of_nodes) * 100).floor)
-			end
-			return level_nodes
+			return get_health_list(desired_depth)
 		end
 	end
 
 	#### Extensions
 
+	# def delete(movie_rating)
+	# 	depth, node = get_nodes_by_rating(@head, movie_rating, 0)
+	# 	parent_node = get_parent_node(@head, node)
+	# 	p parent_node.movie_rating
+	# 	# child_nodes = collect_nodes(node,[])
+	# 	# child_nodes.each_with_index do |child_node, i|
+	# 	# 	p "#{child_node.movie_rating}  #{child_node.movie_title}"
+	# 	# end
+	# end
 
 	private
 
-	def get_node_include?(node, movie_rating)
-		if node.nil?
-			return false
-		elsif node.movie_rating == movie_rating
-			return true
-		elsif movie_rating < node.movie_rating
-			get_node_include?(node.lower_link, movie_rating)
-		elsif node.movie_rating < movie_rating
-			get_node_include?(node.higher_link, movie_rating)
-		end
-	end
-
-	def get_maxmin_node(node, maxmin)
+	def maxmin(maxmin)
 		if @head.nil?
 			return {}
-		elsif maxmin == "max"
-			if node.higher_link.nil?
-				return { node.movie_title => node.movie_rating }
-			else
-				get_maxmin_node(node.higher_link, maxmin)
-			end
-		elsif maxmin == "min"
-			if node.lower_link.nil?
-				return { node.movie_title => node.movie_rating }
-			else
-				get_maxmin_node(node.lower_link, maxmin)
-			end
+		else
+			return @head.maxmin(maxmin)
 		end
 	end
 
-	def find_rating(node, movie_rating, depth)
-		if node.nil?
+	def get_nodes_by_depth(desired_depth)
+		if @head.nil?
 			return nil
-		elsif node.movie_rating == movie_rating
-			return depth
 		else
-			ratings = []
-			ratings.push(find_rating(node.lower_link, movie_rating, depth+1))
-			ratings.push(find_rating(node.higher_link, movie_rating, depth+1))
-			ratings = ratings.delete_if { |rating| rating.nil? }
-			if ratings.empty?
-				return nil
-			else
-				return ratings[0]
-			end
+			return @head.get_nodes_by_depth(desired_depth)
 		end
 	end
 
-	def collect_nodes(node, all_nodes)
-		if node.nil?
-			return all_nodes
-		else
-			all_nodes.push(node)
-			collect_nodes(node.lower_link, all_nodes)
-			collect_nodes(node.higher_link, all_nodes)
-		end
-	end
+	def get_health_list(desired_depth)
+		health_list = []
 
-	def collect_nodes_at_depth(node, all_nodes, current_depth, desired_depth)
-		if node.nil?
-			return all_nodes
-		elsif current_depth == desired_depth
-			all_nodes.push(node)
-			return all_nodes
-		else
-			collect_nodes_at_depth(node.lower_link, all_nodes, current_depth+1, desired_depth)
-			collect_nodes_at_depth(node.higher_link, all_nodes, current_depth+1, desired_depth)
+		total_number_of_nodes = (@head.get_child_nodes.length + 1) / 1.0
+		nodes_at_desired_depth = get_nodes_by_depth(desired_depth)
+
+		nodes_at_desired_depth.each do |node|
+			node_health_list = []
+
+			number_of_child_nodes = (node.get_child_nodes.length + 1)
+			node_percent = ((number_of_child_nodes / total_number_of_nodes) * 100).floor
+			
+			node_health_list.push(node.movie_rating)
+			node_health_list.push(number_of_child_nodes)
+			node_health_list.push(node_percent)
+
+			health_list.push(node_health_list)
 		end
+
+		return health_list
 	end
 
 	##### Extensions
 
+	# def get_parent_node(starting_node, child_node)
+	# 	if starting_node.lower_link == child_node || starting_node.higher_link == child_node
+	# 		return starting_node
+	# 	else
+	# 		if starting_node.lower_link.nil? == false
+	# 			p "high"
+	# 			get_parent_node(starting_node.lower_link, child_node)
+	# 		end
+	# 		if starting_node.higher_link.nil? == false
+	# 			p "low"
+	# 			get_parent_node(starting_node.higher_link, child_node)
+	# 		end
+	# 	end
+	# end
 
 end
 
