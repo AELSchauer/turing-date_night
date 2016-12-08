@@ -1,12 +1,10 @@
 require 'minitest/autorun'
 require 'minitest/pride'
-require './lib/binary_search_tree'
 require './lib/node'
-require './lib/insertion_sort'
 
 class NodeTest < Minitest::Test
 
-  def test_node_exists
+  def test_exists
     # skip #basic
     movie_rating = 61
     movie_title = "Bill and Ted's Excellent Adventure"
@@ -15,20 +13,34 @@ class NodeTest < Minitest::Test
     assert_equal node.movie_rating, movie_rating
     assert_equal node.movie_title, movie_title
   end
-  def test_node_insert_unique
+  def test_higher_link_has_higher_rating
+    # skip #basic
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    head.insert(10, "Titanic")
+    head.insert(92, "Sharknado 3")
+    assert_equal 92, head.higher_link.movie_rating
+  end
+  def test_lower_link_has_lower_rating
+    # skip #basic
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    head.insert(10, "Titanic")
+    head.insert(92, "Sharknado 3")
+    assert_equal 10, head.lower_link.movie_rating
+  end
+  def test_insert_unique
     # skip #insert
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
     depth_1 = head.insert(10, "Titanic")
     assert_equal 1, depth_1
   end
-  def test_node_insert_duplicate
+  def test_insert_duplicate
     # skip #insert
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
     head.insert(10, "Titanic")
     depth_1 = head.insert(10, "Titanic")
     assert_nil depth_1
   end
-  def test_node_many_inserts
+  def test_many_inserts
     # skip #insert
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
     insert_1 = head.insert(4, "Shakespeare in Love")
@@ -49,20 +61,20 @@ class NodeTest < Minitest::Test
     assert_equal 3, insert_7
     assert_equal 4, insert_8
   end
-  def test_node_get_child_nodes_no_links
+  def test_get_descendant_nodes_no_links
     # skip #node_get_child
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
-    child_nodes = head.get_child_nodes
+    child_nodes = head.get_descendant_nodes
     assert_equal [], child_nodes
   end
-  def test_node_get_child_nodes_after_one_insert
+  def test_get_descendant_nodes_after_one_insert
     # skip #node_get_child
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
     head.insert(10, "Titanic")
-    child_nodes = head.get_child_nodes
+    child_nodes = head.get_descendant_nodes
     assert_equal 10, child_nodes[0].movie_rating
   end
-  def test_node_get_child_nodes_after_many_inserts
+  def test_get_descendant_nodes_after_many_inserts
     # skip #node_get_child
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
     head.insert(4, "Shakespeare in Love")
@@ -73,7 +85,7 @@ class NodeTest < Minitest::Test
     head.insert(73, "The Room")
     head.insert(87, "The Scorpion King 4: Quest for Power")
     head.insert(84, "Waterworld")
-    child_nodes = head.get_child_nodes
+    child_nodes = head.get_descendant_nodes
 
     assert_equal 4, child_nodes[0].movie_rating 
     assert_equal 16, child_nodes[1].movie_rating 
@@ -85,14 +97,12 @@ class NodeTest < Minitest::Test
     assert_equal 84, child_nodes[7].movie_rating
   end
 
-
   def test_get_node_by_depth_no_inserts
     # skip #node_get_by_depth
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
     depth_1 = head.get_nodes_by_depth(1)
     assert_equal [], depth_1
   end
-
   def test_get_node_by_depth_many_inserts
     # skip #node_get_by_depth
     head = Node.new(61, "Bill and Ted's Excellent Adventure")
@@ -118,6 +128,51 @@ class NodeTest < Minitest::Test
     assert_equal 87, depth_3[1].movie_rating
     assert_equal 10, depth_4[0].movie_rating
     assert_equal 84, depth_4[1].movie_rating
+  end
+
+  def test_get_parent_node_of_head_node
+    # skip #get_parent_node
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    parent_node = head.get_parent_node(head)
+    assert_nil parent_node
+  end
+  def test_get_parent_node_of_level_one_lower_node
+    # skip #get_parent_node
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    head.insert(4, "Shakespeare in Love")
+    child_node = head.get_node_by_movie_rating(4)
+    parent_node = head.get_parent_node(child_node)
+
+    assert_equal 61, parent_node.movie_rating
+  end
+    def test_get_parent_node_of_level_two_lower_node
+    # skip #get_parent_node
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    head.insert(4, "Shakespeare in Love")
+    head.insert(16, "Johnny English")
+    child_node = head.get_node_by_movie_rating(16)
+    parent_node = head.get_parent_node(child_node)
+    
+    assert_equal 4, parent_node.movie_rating
+  end
+  def test_get_parent_node_of_level_one_higher_node
+    # skip #get_parent_node
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    head.insert(92, "Sharknado 3")
+    child_node = head.get_node_by_movie_rating(92)
+    parent_node = head.get_parent_node(child_node)
+
+    assert_equal 61, parent_node.movie_rating
+  end
+    def test_get_parent_node_of_level_two_higher_node
+    # skip #get_parent_node
+    head = Node.new(61, "Bill and Ted's Excellent Adventure")
+    head.insert(92, "Sharknado 3")
+    head.insert(73, "The Room")
+    child_node = head.get_node_by_movie_rating(73)
+    parent_node = head.get_parent_node(child_node)
+    
+    assert_equal 92, parent_node.movie_rating
   end
 
 end

@@ -1,7 +1,6 @@
-require './lib/node'
-require './lib/insertion_sort'
 require './lib/load'
-require 'pry'
+require './lib/node'
+require './lib/sort'
 
 class BinarySearchTree
 
@@ -13,10 +12,10 @@ class BinarySearchTree
 			return 0
 		else
       return @head.insert(movie_rating, movie_title)
-		end #NOT DONE
+		end
 	end
 
-	def include?(movie_rating) #NOT DONE
+	def include?(movie_rating)
 		if @head.nil?
 			return false
 		else
@@ -25,15 +24,15 @@ class BinarySearchTree
 		end
 	end
 
-	def max #NOT DONE
+	def max
 		return maxmin("max")
 	end
 
-	def min #NOT DONE
+	def min
 		return maxmin("min")
 	end
 
-	def depth_of(movie_rating) #NOT DONE
+	def depth_of(movie_rating)
 		if @head.nil?
 			return nil
 		else
@@ -46,22 +45,20 @@ class BinarySearchTree
 		if @head.nil?
 			return []
 		else
-			nodes = @head.get_child_nodes
+			nodes = @head.get_descendant_nodes
 			nodes.push(@head)
-			sorter = InsertionSort.new
-			nodes = sorter.sort(nodes)
-			return nodes.map { |sorted_node| {sorted_node.movie_title => sorted_node.movie_rating} }
-		end #NOT DONE
+			nodes = Sort.insertion_sort(nodes)
+			return nodes.map { |node| {node.movie_title => node.movie_rating} }
+		end 
 	end
 
 	def load(file_name)
-		loader = Load.new
-		opened_file = loader.open_file(file_name)
-		if opened_file.nil?
+		text_file = Load.open_file(file_name)
+		if text_file.nil?
 			return nil
 		else
+			movies = Load.retrieve_movies_list(text_file)
 			upload_count = 0
-			movies = loader.retrieve_movies_list(opened_file)
 			movies.each do |movie_rating, movie_title|
 				depth = insert(movie_rating, movie_title)
 				if not depth.nil?
@@ -69,10 +66,10 @@ class BinarySearchTree
 				end
 			end
 			return upload_count
-		end#NOT DONE
+		end
 	end
 
-	def health(desired_depth) #NOT DONE
+	def health(desired_depth)
 		if @head.nil?
 			return nil
 		else
@@ -82,15 +79,37 @@ class BinarySearchTree
 
 	#### Extensions
 
-	# def delete(movie_rating)
-	# 	depth, node = get_nodes_by_rating(@head, movie_rating, 0)
-	# 	parent_node = get_parent_node(@head, node)
-	# 	p parent_node.movie_rating
-	# 	# child_nodes = collect_nodes(node,[])
-	# 	# child_nodes.each_with_index do |child_node, i|
-	# 	# 	p "#{child_node.movie_rating}  #{child_node.movie_title}"
-	# 	# end
-	# end
+	def delete(movie_rating)
+		if @head.nil?
+			return nil
+		else
+			delete_node = @head.get_node_by_movie_rating(movie_rating)
+			descendant_nodes = delete_node.get_descendant_nodes
+			if @head != delete_node
+				parent_node = @head.get_parent_node(delete_node)
+				if delete_node.movie_rating < parent_node.movie_rating
+					parent_node.lower_link = nil
+				elsif parent_node.movie_rating < delete_node.movie_rating
+					parent_node.higher_link = nil
+				end
+			else
+				@head = nil
+				if not descendant_nodes.empty?
+					descendant_nodes = Sort.insertion_sort(descendant_nodes)
+					head_index = descendant_nodes.length / 2
+					@head = descendant_nodes[head_index]
+					@head.depth = 0
+					descendant_nodes.delete_at(head_index)
+				end
+			end
+			descendant_nodes.each do |descendant_node|
+				descendant_node.higher_link = nil
+				descendant_node.lower_link = nil
+				@head.insert_existing(descendant_node)
+			end
+			return movie_rating
+		end
+	end
 
 	private
 
@@ -113,13 +132,13 @@ class BinarySearchTree
 	def get_health_list(desired_depth)
 		health_list = []
 
-		total_number_of_nodes = (@head.get_child_nodes.length + 1) / 1.0
+		total_number_of_nodes = (@head.get_descendant_nodes.length + 1) / 1.0
 		nodes_at_desired_depth = get_nodes_by_depth(desired_depth)
 
 		nodes_at_desired_depth.each do |node|
 			node_health_list = []
 
-			number_of_child_nodes = (node.get_child_nodes.length + 1)
+			number_of_child_nodes = (node.get_descendant_nodes.length + 1)
 			node_percent = ((number_of_child_nodes / total_number_of_nodes) * 100).floor
 			
 			node_health_list.push(node.movie_rating)
@@ -133,21 +152,6 @@ class BinarySearchTree
 	end
 
 	##### Extensions
-
-	# def get_parent_node(starting_node, child_node)
-	# 	if starting_node.lower_link == child_node || starting_node.higher_link == child_node
-	# 		return starting_node
-	# 	else
-	# 		if starting_node.lower_link.nil? == false
-	# 			p "high"
-	# 			get_parent_node(starting_node.lower_link, child_node)
-	# 		end
-	# 		if starting_node.higher_link.nil? == false
-	# 			p "low"
-	# 			get_parent_node(starting_node.higher_link, child_node)
-	# 		end
-	# 	end
-	# end
 
 end
 
@@ -174,17 +178,6 @@ end
 # ```ruby
 # tree.height
 # # => 3
-# ```
-
-# ### Deleting nodes
-
-# Remove a specified piece score from the tree:
-
-# ```ruby
-# tree.delete(30)
-# # => 30
-# tree.delete(101)
-# # => nil
 # ```
 
 # Note that any children of the deleted node should still be present in the tree.

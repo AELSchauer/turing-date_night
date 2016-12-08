@@ -1,5 +1,3 @@
-require './lib/binary_search_tree'
-
 class Node
 	
   attr_accessor :movie_rating, :movie_title, :lower_link, :higher_link, :depth
@@ -8,6 +6,8 @@ class Node
 		@movie_rating = movie_rating
 		@movie_title = movie_title
     @depth = depth
+    @lower_link = nil
+    @higher_link = nil
 	end
 
   def insert(movie_rating, movie_title)
@@ -62,14 +62,14 @@ class Node
     end
   end
 
-  def get_child_nodes(node_list=[])
+  def get_descendant_nodes(node_list=[])
     if not @lower_link.nil?
       node_list.push(@lower_link)
-      node_list = @lower_link.get_child_nodes(node_list)
+      node_list = @lower_link.get_descendant_nodes(node_list)
     end
     if not @higher_link.nil?
       node_list.push(@higher_link)
-      node_list = @higher_link.get_child_nodes(node_list)
+      node_list = @higher_link.get_descendant_nodes(node_list)
     end
     return node_list
   end
@@ -89,7 +89,48 @@ class Node
     end
   end
 
+  def get_parent_node(child_node)
+    if self == child_node
+      return nil
+    else
+      if child_node.movie_rating < @movie_rating 
+        if not @lower_link.nil?
+          if @lower_link == child_node
+            return self
+          else
+            @lower_link. get_parent_node(child_node)
+          end
+        end
+      elsif @movie_rating < child_node.movie_rating
+        if not @higher_link.nil?
+          if @higher_link == child_node
+            return self
+          else
+            @higher_link.get_parent_node(child_node)
+          end
+        end
+      end
+    end
+  end
 
-
+  def insert_existing(node)
+    if node.movie_rating < @movie_rating
+      if @lower_link.nil?
+        @lower_link = node
+        node.depth = @depth+1
+        return @depth+1
+      else
+        @lower_link.insert_existing(node)
+      end
+    elsif @movie_rating < node.movie_rating
+      if @higher_link.nil?
+        @higher_link = node
+        node.depth = @depth+1
+        return @depth+1
+      else
+        @higher_link.insert_existing(node)
+      end
+    end
+  end
 
 end

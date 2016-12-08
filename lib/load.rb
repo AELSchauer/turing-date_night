@@ -1,6 +1,6 @@
 class Load
 
-  def open_file(file_name)
+  def self.open_file(file_name)
     begin
        text_file = File.open(file_name)
     rescue
@@ -10,7 +10,7 @@ class Load
     end
   end
 
-  def retrieve_movies_list(text_file)
+  def self.retrieve_movies_list(text_file)
     movies = []
     text_file.each do |line|
       line.gsub!("\n","")
