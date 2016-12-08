@@ -133,4 +133,19 @@ class Node
     end
   end
 
+  def get_leaves(node_list=[])
+    if @lower_link.nil? && @higher_link.nil?
+      node_list.push(self)
+      return node_list
+    else
+      if not @lower_link.nil?
+        node_list = @lower_link.get_leaves(node_list)
+      end
+      if not @higher_link.nil?
+        node_list = @higher_link.get_leaves(node_list)
+      end
+    end
+    return node_list
+  end
+  
 end
